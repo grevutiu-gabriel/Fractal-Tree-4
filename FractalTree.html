@@ -1,0 +1,111 @@
+<html lang="de">
+<head>
+<title>
+</title>
+<style type="text/css">
+canvas {
+	background-color: rgb(64, 64, 64);
+	border: 5px solid black;
+}
+</style>
+</head>
+<body>
+<canvas id="canvas" height="800" width="1200">Canvas is not supported or deactivated</canvas>
+<div>
+  <input type="range" min="0" max="3" value="1.5" step="0.05" id="range">
+</div>
+</body>
+<script type="text/javascript">
+var c,ctx,angle;
+c = document.getElementById("canvas");
+ctx = c.getContext("2d");
+ctx.strokeStyle = "white";
+c.width = window.innerWidth - c.offsetLeft*4;
+c.height = window.innerHeight - c.offsetTop*10;
+let Branch_Count = 2;
+let range = Math.PI/3;
+let slider = document.getElementById("range");
+
+function map  (input,start,stop,min,max)  {return (input-start)*((max-min)/(stop-start))+min}
+
+class Tree {
+	constructor(x,y,length,parent,iterations) {
+		this.x = x || c.width/2;
+		this.y = y || c.height-length;
+		if(parent) {
+			this.parent = parent;
+			this.child = [];
+			this.length = this.parent.length*0.6;
+			this.width 	= this.parent.width*0.6;
+			this.angle = 	(!this.parent.child.length == 0) ? this.parent.angle+range/2 : this.parent.angle-range/2;
+		} else {
+			this.child = [];
+			this.length = length;
+			this.width = length/10;
+			this.angle = 0;
+		}
+		if(iterations) {
+			for(let i=0;i<iterations;i++) {
+				this.addChild();
+			}
+		}
+	}
+
+	draw() {
+		ctx.lineWidth = this.width;
+		ctx.beginPath();
+		if(this.parent) {
+			ctx.arc(this.x,this.y,5,0,Math.PI*2);
+			ctx.moveTo(this.parent.x,this.parent.y);
+			ctx.lineTo(this.x,this.y);
+		} else {
+			ctx.arc(this.x,this.y,5,0,Math.PI*2);
+			ctx.moveTo(this.x,this.y);
+			ctx.lineTo(this.x,this.y+this.length);
+		}
+		ctx.strokeStyle = "white";
+		ctx.closePath();
+		ctx.stroke();
+
+		if(this.child.length != 0) {
+			for(let child of this.child) {
+				child.draw();
+			}
+		}
+	}
+
+	addChild() {
+		if(this.child.length == 0) {
+			for(let i=1;i<=Branch_Count;i++) {
+				let p = angle(this.angle+map(i,1,Branch_Count,-range/2,range/2),this.length);
+				this.child.push(new Tree(this.x+p.x,this.y+p.y,"",this));
+			}
+	} else {
+		for(let child of this.child) {
+			child.addChild();
+		}
+	}
+}
+
+}
+
+function angle(ang,l) {
+	const x_ = Math.cos(ang-Math.PI/2)*l;
+	const y_ = Math.sin(ang-Math.PI/2)*l;
+	return {x:x_,y:y_};
+}
+
+let T1 = new Tree("","",200,"",5);
+let T2 = new Tree(400,400,200,"",4);
+let T3 = new Tree("","",200,"",8);
+T1.draw();
+
+slider.oninput = function() {
+	range = this.value;
+	ctx.clearRect(0,0,c.width,c.height);
+	T1 = new Tree("","",200,"",5);
+	T1.draw();
+}
+
+</script>
+</html>
